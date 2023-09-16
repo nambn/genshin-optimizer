@@ -21,7 +21,6 @@ import {
   withMember,
 } from '@genshin-optimizer/gi-formula'
 import { ascensionMaxLevel } from '@genshin-optimizer/gi-util'
-import { read } from '@genshin-optimizer/pando'
 import { CardThemed } from '@genshin-optimizer/ui-common'
 import { range } from '@genshin-optimizer/util'
 import { Favorite, FavoriteBorder } from '@mui/icons-material'
@@ -40,10 +39,14 @@ import { CalcContext } from '../../Context/CalcContext'
 import { SillyContext } from '../../Context/SillyContext'
 import { DatabaseContext } from '../../Database/Database'
 import useCharMeta from '../../Hooks/useCharMeta'
+import useCharacter from '../../Hooks/useCharacter'
 import useDBMeta from '../../Hooks/useDBMeta'
+import useWeapon from '../../Hooks/useWeapon'
 import type { ICachedArtifact } from '../../Types/artifact'
+import type { ICachedCharacter } from '../../Types/character'
 import { iconAsset } from '../../Util/AssetUtil'
 import { NodeFieldDisplay } from '../FieldDisplay'
+import WeaponCardPico from '../Weapon/WeaponCardPico'
 
 // TODO: Add all this stuff back
 type CharacterCardProps = {
@@ -72,35 +75,44 @@ export default function CharacterCard({
 }: CharacterCardProps) {
   const { database } = useContext(DatabaseContext)
   // const teamData = useTeamData(characterKey)
-  // const character = useCharacter(characterKey)
-  // const character: ICachedCharacter = {
-  //   key: characterKey,
-  //   level: 50,
-  //   constellation: 3,
-  //   ascension: 3,
-  //   talent: {
-  //     auto: 5,
-  //     skill: 5,
-  //     burst: 5,
-  //   },
-  //   hitMode: 'avgHit',
-  //   conditional: {},
-  //   bonusStats: {},
-  //   enemyOverride: {},
-  //   infusionAura: '',
-  //   compareData: false,
-  //   customMultiTarget: [],
-  //   team: ['', '', ''],
-  //   teamConditional: {},
-  //   equippedArtifacts: {
-  //     flower: '',
-  //     plume: '',
-  //     sands: '',
-  //     goblet: '',
-  //     circlet: '',
-  //   },
-  //   equippedWeapon: 'test',
-  // }
+  // TODO: Remove this fallback
+  const character = useCharacter(characterKey) ?? {
+    key: characterKey,
+    level: 50,
+    constellation: 3,
+    ascension: 3,
+    talent: {
+      auto: 5,
+      skill: 5,
+      burst: 5,
+    },
+    hitMode: 'avgHit',
+    conditional: {},
+    bonusStats: {},
+    enemyOverride: {},
+    infusionAura: '',
+    compareData: false,
+    customMultiTarget: [],
+    team: ['', '', ''],
+    teamConditional: {},
+    equippedArtifacts: {
+      flower: '',
+      plume: '',
+      sands: '',
+      goblet: '',
+      circlet: '',
+    },
+    equippedWeapon: 'test',
+  }
+  const weapon = useWeapon(character.equippedWeapon) ?? {
+    key: 'PrototypeAmber',
+    level: 50,
+    ascension: 3,
+    refinement: 1,
+    location: characterKey as LocationKey,
+    lock: false,
+    id: 'test',
+  }
   // const { gender } = useDBMeta()
   // const characterSheet = getCharSheet(characterKey, gender)
   // const characterDispatch = useCharacterReducer(characterKey)
@@ -148,25 +160,8 @@ export default function CharacterCard({
       ...teamData(['member0'], ['member0']),
       ...withMember(
         'member0',
-        ...charData({
-          key: characterKey,
-          level: 50,
-          ascension: 3,
-          constellation: 3,
-          talent: {
-            auto: 1,
-            skill: 1,
-            burst: 1,
-          },
-        }),
-        ...weaponData({
-          key: 'KeyOfKhajNisut',
-          level: 50,
-          ascension: 3,
-          refinement: 1,
-          location: characterKey as LocationKey,
-          lock: false,
-        }),
+        ...charData(character),
+        ...weaponData(weapon),
         ...artifactsData([
           // per art stat
         ]),
@@ -227,7 +222,7 @@ export default function CharacterCard({
           // onClick={onClick}
           // onClickHeader={onClickHeader}
           isTeammateCard={isTeammateCard}
-          // character={character}
+          character={character}
           // onClickTeammate={onClickTeammate}
           hideStats={hideStats}
           // weaponChildren={weaponChildren}
@@ -252,7 +247,7 @@ type ExistingCharacterCardContentProps = {
   // onClick?: (characterKey: CharacterKey) => void
   // onClickHeader?: (characterKey: CharacterKey) => void
   isTeammateCard?: boolean
-  // character: ICachedCharacter
+  character: ICachedCharacter
   // onClickTeammate?: (characterKey: CharacterKey) => void
   hideStats?: boolean
   weaponChildren?: Displayable
@@ -267,7 +262,7 @@ function ExistingCharacterCardContent({
   // onClick,
   // onClickHeader,
   isTeammateCard,
-  // character,
+  character,
   // onClickTeammate,
   hideStats,
   weaponChildren,
@@ -296,29 +291,28 @@ function ExistingCharacterCardContent({
       >
         <Artifacts />
         {!isTeammateCard && (
-          <Grid container columns={4} spacing={0.75}>
-            <Grid item xs={1} height="100%">
-              {/* <WeaponCardPico weaponId={character.equippedWeapon} /> */}
-            </Grid>
-            {range(0, 2).map((i) => (
-              <Grid key={i} item xs={1} height="100%">
-                {/* {character.team[i] ? (
-                  <CharacterCardPico
-                    simpleTooltip={hideStats}
-                    characterKey={character.team[i] as CharacterKey}
-                    onClick={!onClick ? onClickTeammate : undefined}
-                  />
-                ) : (
-                  <BlankCharacterCardPico index={i} />
-                )} */}
-              </Grid>
-            ))}
-          </Grid>
+          <WeaponCardPico weaponId={character.equippedWeapon} />
+          // <Grid container columns={4} spacing={0.75}>
+          //   <Grid item xs={1} height="100%">
+          //   </Grid>
+          //   {range(0, 2).map((i) => (
+          //     <Grid key={i} item xs={1} height="100%">
+          //       {character.team[i] ? (
+          //         <CharacterCardPico
+          //           simpleTooltip={hideStats}
+          //           characterKey={character.team[i] as CharacterKey}
+          //           onClick={!onClick ? onClickTeammate : undefined}
+          //         />
+          //       ) : (
+          //         <BlankCharacterCardPico index={i} />
+          //       )}
+          //     </Grid>
+          //   ))}
+          // </Grid>
         )}
         {/* {isTeammateCard && (
           <WeaponFullCard weaponId={character.equippedWeapon} />
         )} */}
-        <TempWeaponCard />
         {!isTeammateCard && !hideStats && <Stats />}
         {weaponChildren}
         {artifactChildren}
@@ -570,38 +564,6 @@ function Stats() {
           calcResult={calc.compute(member0.base[key])}
         />
       ))}
-    </Box>
-  )
-}
-
-function TempWeaponCard() {
-  const { calc } = useContext(CalcContext)
-  const member0 = convert(selfTag, { member: 'member0', et: 'self' })
-  if (!calc) return null
-  return (
-    <Box>
-      Weapon stats:
-      {Object.keys(selfTag.weapon).map((key) => (
-        <NodeFieldDisplay
-          key={key}
-          calcResult={calc.compute(member0.weapon[key])}
-        />
-      ))}
-      {'atk: '}
-      {
-        calc.compute(
-          read(
-            {
-              member: 'member0',
-              src: 'KeyOfKhajNisut',
-              qt: 'base',
-              q: 'atk',
-              et: 'self',
-            },
-            'sum'
-          )
-        ).val
-      }
     </Box>
   )
 }
