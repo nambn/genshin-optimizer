@@ -27,7 +27,7 @@ function entriesForWeapon(key: WeaponKey): TagMapNodeEntries {
   const { refinement, ascension } = self.weapon
   const specials = new Set(Object.keys(gen.ascensionBonus))
 
-  const a = register(key, [
+  return register(key, [
     // Stats
     ...gen.lvlCurves.map(({ key, base, curve }) =>
       addStatCurve(key, prod(base, allStatics('static')[curve]))
@@ -41,8 +41,6 @@ function entriesForWeapon(key: WeaponKey): TagMapNodeEntries {
     // Listing
     ...[...specials].map((key) => registerStatListing(key)),
   ])
-  console.log(a)
-  return a
 }
 
 export default data.flat()
